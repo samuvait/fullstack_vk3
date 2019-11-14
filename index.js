@@ -6,8 +6,8 @@ const cors = require('cors')
 const morgan = require('morgan')
 const Person = require('./models/person')
 
-morgan.token('data', (req, res) => {
-  let body = JSON.stringify(req.body)
+morgan.token('data', (request, response) => {
+  let body = JSON.stringify(request.body)
   if (body !== '{}') {
     return body
   } else {
@@ -37,7 +37,7 @@ app.get('/info', (request, response) => {
   })
 })
 
-app.get('/api/persons', (request, response, next) => {
+app.get('/api/persons', (request, response) => {
   let persons = []
   Person.find({}).then(result => {
     result.forEach(person => {
@@ -47,7 +47,7 @@ app.get('/api/persons', (request, response, next) => {
   })
 })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
   Person.findById(request.params.id).then(person => {
     if (person) {
       response.json(person.toJSON())
@@ -58,7 +58,7 @@ app.get('/api/persons/:id', (request, response) => {
   }).catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id).then(response.status(204).end()).catch(error => next(error))
 })
 
@@ -106,7 +106,7 @@ app.use(unknownEndpoint)
 const errorHandler = (error, request, response, next) => {
   console.log(error.message)
 
-  if (error.name === 'CastError' && error.kind == 'ObjectId') {
+  if (error.name === 'CastError' && error.kind === 'ObjectId') {
     return response.status(400).send({ error: 'malformatted id' })
   } else if (error.name === 'ValidationError') {
     return response.status(400).json({ error: error.message })
