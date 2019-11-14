@@ -16,7 +16,7 @@ const password = process.argv[2]
 
 const url = `mongodb+srv://fullstack:${password}@practice-0cjck.mongodb.net/phonebook?retryWrites=true&w=majority`
 
-mongoose.connect(url, { useNewUrlParser: true })
+mongoose.connect(url, { useNewUrlParser: true, useFindAndModify: false })
 
 if (process.argv.length < 4) {
   console.log('Phonebook:')
