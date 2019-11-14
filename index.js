@@ -17,6 +17,7 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :d
 
 app.use(cors())
 app.use(bodyParser.json())
+app.use(express.static('build'))
 
 let persons = [
   {
@@ -103,14 +104,17 @@ app.post('/api/persons', (request, response) => {
 app.put('/api/persons/:id', (request, response) => {
   const body = request.body
   const id = Number(request.params.id)
-  
-  const newPerson = {
-    name: body.name,
-    number: body.number
-  }
 
-  persons = persons.map(person => person.id !== id ? person : newPerson)
-  response.json(newPerson)
+  if (persons.filter(person => person.id === id)[0]) {
+    const newPerson = {
+      name: body.name,
+      number: body.number,
+      id: id
+    }
+  
+    persons = persons.map(person => person.id !== id ? person : newPerson)
+    response.json(newPerson)
+  }
 })
 
 const port = process.env.PORT || 3001
