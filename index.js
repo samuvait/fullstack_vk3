@@ -1,15 +1,12 @@
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
-const morgan = require('morgan')
 const cors = require('cors')
-
-app.use(cors())
-app.use(bodyParser.json())
+const morgan = require('morgan')
 
 morgan.token('data', (req, res) => {
   let body = JSON.stringify(req.body)
-  if(body !== '{}') {
+  if (body !== '{}') {
     return body
   } else {
     return ''
@@ -17,6 +14,9 @@ morgan.token('data', (req, res) => {
 })
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :data'))
+
+app.use(cors())
+app.use(bodyParser.json())
 
 let persons = [
   {
@@ -52,6 +52,7 @@ app.get('/info', (request, response) => {
 })
 
 app.get('/api/persons', (request, response) => {
+  //console.log(persons)
   response.json(persons)
 })
 
@@ -97,6 +98,19 @@ app.post('/api/persons', (request, response) => {
       error: 'content missing'
     })
   }
+})
+
+app.put('/api/persons/:id', (request, response) => {
+  const body = request.body
+  const id = Number(request.params.id)
+  
+  const newPerson = {
+    name: body.name,
+    number: body.number
+  }
+
+  persons = persons.map(person => person.id !== id ? person : newPerson)
+  response.json(newPerson)
 })
 
 const port = process.env.PORT || 3001
