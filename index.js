@@ -28,7 +28,13 @@ app.get('/', (request, response) => {
 app.get('/info', (request, response) => {
   let date = new Date()
   let tm = date.toString()
-  response.send(`<p>Phonebook has the information of ${persons.length} people</p><p>${tm}</p>`)
+  let amount = 0
+
+  Person.find({}).then(result => {
+    console.log(`result ${result.length}`)
+    amount = result.length
+    response.send(`<p>Phonebook has the information of ${amount} people</p><p>${tm}</p>`)
+  })
 })
 
 app.get('/api/persons', (request, response) => {
@@ -43,12 +49,20 @@ app.get('/api/persons', (request, response) => {
 
 app.get('/api/persons/:id', (request, response) => {
   Person.findById(request.params.id).then(person => {
-    response.json(person.toJSON())
+    if (person) {
+      response.json(person.toJSON())
+    } else {
+      response.status(404).end()
+    }
+
+  }).catch(error => {
+    console.log(error)
+    response.status(400).send({ error: 'malformatted id' })
   })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
-  Person.findByIdAndRemove(request.params.id).then(response.status(204).end())
+  Person.findByIdAndRemove(request.params.id).then(response.status(204).end()).catch(error => next(error))
 })
 
 app.post('/api/persons', (request, response) => {
@@ -81,9 +95,27 @@ app.put('/api/persons/:id', (request, response) => {
 
   Person.findOneAndUpdate({ _id: id }, { number: newPerson.number }, { new: true }).then(person => {
     response.json(person.toJSON())
-  })
+  }).catch(error => next(error))
 
 })
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+}
+
+app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+  console.log(error.message)
+
+  if (error.name === 'CastError' && error.kind == 'ObjectId') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+
+  next(error)
+}
+
+app.use(errorHandler)
 
 const port = process.env.PORT || 3001
 app.listen(port, () => {
